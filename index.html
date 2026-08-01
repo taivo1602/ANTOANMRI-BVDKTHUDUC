@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Khai Báo An Toàn MRI - BVĐK Thủ Đức</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background-color: #f8fafc; color: #334155; margin: 0; padding: 12px; }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 18px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        h1 { color: #1e3a8a; font-size: 18px; text-align: center; margin-top: 0; text-transform: uppercase; }
+        .sub-title { text-align: center; color: #2563eb; font-size: 13px; font-weight: bold; margin-bottom: 15px; }
+        .info-note { background: #fffbeb; border-left: 4px solid #d97706; padding: 10px; font-size: 13px; margin-bottom: 15px; border-radius: 4px; }
+        .form-group { margin-bottom: 12px; display: flex; flex-direction: column; }
+        .form-group label { font-weight: bold; font-size: 13px; margin-bottom: 4px; color: #1e293b; }
+        .form-group input, .form-group select { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 15px; width: 100%; outline: none; -webkit-appearance: none; }
+        .form-row { display: flex; gap: 10px; }
+        .form-row .form-group { flex: 1; }
+        .group-header { padding: 8px 10px; color: white; font-weight: bold; font-size: 12px; text-transform: uppercase; border-radius: 6px; margin-top: 15px; margin-bottom: 8px; }
+        .bg-danger { background-color: #dc2626; }
+        .bg-warning { background-color: #d97706; }
+        .bg-info { background-color: #2563eb; }
+        .bg-secondary { background-color: #475569; }
+        .q-row { padding: 10px 0; border-bottom: 1px #e2e8f0 dashed; font-size: 13px; }
+        .q-text { font-weight: 500; margin-bottom: 6px; }
+        .q-options { display: flex; gap: 20px; }
+        .q-options label { display: flex; align-items: center; gap: 5px; font-weight: bold; cursor: pointer; }
+        .sign-area { border: 2px dashed #cbd5e1; background: #fafafa; border-radius: 6px; height: 130px; position: relative; margin-top: 5px; touch-action: none; }
+        .sign-area canvas { width: 100%; height: 100%; display: block; }
+        .btn-clear { position: absolute; bottom: 5px; right: 5px; background: #e2e8f0; border: none; padding: 4px 8px; font-size: 11px; border-radius: 4px; }
+        .btn-submit { width: 100%; background: #1d4ed8; color: white; border: none; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 8px; margin-top: 15px; cursor: pointer; }
+        .success-box { display: none; text-align: center; padding: 30px 10px; }
+        .success-box h2 { color: #16a34a; }
+    </style>
+
+    <!-- Firebase SDK v9 -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+</head>
+<body>
+
+    <div class="container" id="form-container">
+        <h1>HƯỚNG DẪN AN TOÀN MRI</h1>
+        <div class="sub-title">BỆNH VIỆN ĐA KHOA THỦ ĐỨC</div>
+
+        <div class="info-note">
+            ⚠️ <b>LƯU Ý quan trọng:</b> Phòng chụp MRI có từ trường rất mạnh. Vui lòng khai báo trung thực các vật dụng kim loại hoặc thiết bị cấy ghép trên cơ thể.
+        </div>
+
+        <form id="patient-form" onsubmit="submitForm(event)">
+            <div class="form-group">
+                <label>Họ và tên bệnh nhân <span style="color:red">*</span></label>
+                <input type="text" id="p-name" required placeholder="Nhập đầy đủ họ tên">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Tuổi <span style="color:red">*</span></label>
+                    <input type="number" id="p-age" required placeholder="Ví dụ: 30">
+                </div>
+                <div class="form-group">
+                    <label>Số điện thoại <span style="color:red">*</span></label>
+                    <input type="tel" id="p-phone" required placeholder="SĐT liên hệ">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Chiều cao (cm)</label>
+                    <input type="number" id="p-height" placeholder="165">
+                </div>
+                <div class="form-group">
+                    <label>Cân nặng (kg)</label>
+                    <input type="number" id="p-weight" placeholder="60">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Lý do đi chụp / Vị trí đau <span style="color:red">*</span></label>
+                <input type="text" id="p-reason" required placeholder="Ví dụ: Đau đầu, Chụp cột sống cổ...">
+            </div>
+
+            <div class="form-group">
+                <label>Đã từng chụp MRI trước đây chưa?</label>
+                <select id="p-history">
+                    <option value="Chưa">Chưa</option>
+                    <option value="Rồi">Rồi</option>
+                </select>
+            </div>
+
+            <div class="group-header bg-danger">🛑 NHÓM CHỐNG CHỈ ĐỊNH TUYỆT ĐỐI</div>
+            <div id="group-1"></div>
+
+            <div class="group-header bg-warning">⚠️ NHÓM CẦN BÁO BÁC SĨ / KTV</div>
+            <div id="group-2"></div>
+
+            <div class="group-header bg-info">🧪 TIỀN SỬ DỊ ỨNG & BỆNH NỀN</div>
+            <div id="group-3"></div>
+
+            <div class="group-header bg-secondary">📌 THÁO BỎ VẬT DỤNG KIM LOẠI</div>
+            <div id="group-4"></div>
+
+            <div class="form-group" style="margin-top:15px;">
+                <label>Đồng ý thực hiện chụp MRI:</label>
+                <select id="p-agree">
+                    <option value="ĐỒNG Ý">ĐỒNG Ý chụp MRI và tiêm thuốc (nếu cần)</option>
+                    <option value="KHÔNG ĐỒNG Ý">KHÔNG ĐỒNG Ý</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Chữ ký bệnh nhân / Người nhà <span style="color:red">*</span></label>
+                <div class="sign-area">
+                    <canvas id="signature-canvas"></canvas>
+                    <button type="button" class="btn-clear" onclick="clearSign()">Xóa ký lại</button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit" id="btn-submit-main">🚀 GỬI PHIẾU XÁC NHẬN</button>
+        </form>
+    </div>
+
+    <div class="container success-box" id="success-box">
+        <h2>✅ KHAI BÁO THÀNH CÔNG!</h2>
+        <p>Thông tin của quý khách đã được chuyển trực tiếp tới Kỹ thuật viên phòng MRI.</p>
+        <p>Vui lòng ngồi đợi tại phòng chờ đến lượt gọi tên.</p>
+    </div>
+
+    <script>
+        // CẤU HÌNH FIREBASE CỦA BẠN TẠI ĐÂY
+        const firebaseConfig = {
+  apiKey: "AIzaSyDjWIZl60JZlZjnFIEhezCFcomKS5OEQc4",
+  authDomain: "antoanconghuongtu.firebaseapp.com",
+  projectId: "antoanconghuongtu",
+  storageBucket: "antoanconghuongtu.firebasestorage.app",
+  messagingSenderId: "458456831621",
+  appId: "1:458456831621:web:f2936a421ca8303c5a7bec"
+};
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const LIST_G1 = ["Máy cấy ghép điện cực ốc tai, máy kích thích thần kinh.", "Dị vật kim loại trong mắt, phẫu thuật mắt.", "Máy tạo nhịp tim (Pacemaker/ICD).", "Mang thai dưới 3 tháng.", "Mảnh đạn vùng đầu / gần mạch máu lớn.", "Sợ phòng kín (Claustrophobia)."];
+        const LIST_G2 = ["Van tim nhân tạo, Stent mạch vành.", "Dụng cụ cấy ghép xương ức.", "Metal clips phình mạch脑.", "Bơm tiêm Insulin tự động.", "Có hình xăm trên cơ thể."];
+        const LIST_G3 = ["Tiền sử dị ứng thuốc đối quang từ (Gadolinium).", "Suy thận nặng (Độ 4, 5).", "Bệnh tiểu đường, hen suyễn."];
+        const LIST_G4 = ["Tháo bỏ: Răng giả, đồng hồ, trang sức, ví tiền, thẻ ATM, chìa khóa..."];
+
+        function loadQuestions() {
+            const makeRows = (arr, code) => arr.map((item, index) => `
+                <div class="q-row">
+                    <div class="q-text">${item}</div>
+                    <div class="q-options">
+                        <label><input type="radio" name="${code}_${index}" value="Có" required> <span style="color:#dc2626;">Có</span></label>
+                        <label><input type="radio" name="${code}_${index}" value="Không" required> <span style="color:#16a34a;">Không</span></label>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('group-1').innerHTML = makeRows(LIST_G1, 'G1');
+            document.getElementById('group-2').innerHTML = makeRows(LIST_G2, 'G2');
+            document.getElementById('group-3').innerHTML = makeRows(LIST_G3, 'G3');
+            document.getElementById('group-4').innerHTML = makeRows(LIST_G4, 'G4');
+        }
+
+        let cv, cx, active = false;
+        function setupCanvas() {
+            cv = document.getElementById('signature-canvas'); cx = cv.getContext('2d');
+            cv.width = cv.parentElement.offsetWidth; cv.height = cv.parentElement.offsetHeight;
+            cx.lineWidth = 3; cx.lineCap = 'round'; cx.strokeStyle = '#1e3a8a';
+            const getPos = (e) => {
+                let r = cv.getBoundingClientRect();
+                let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return { x: clientX - r.left, y: clientY - r.top };
+            };
+            const start = (e) => { active = true; cx.beginPath(); let p = getPos(e); cx.moveTo(p.x, p.y); };
+            const move = (e) => { if(!active) return; let p = getPos(e); cx.lineTo(p.x, p.y); cx.stroke(); };
+            const stop = () => active = false;
+
+            cv.addEventListener('mousedown', start); cv.addEventListener('mousemove', move); window.addEventListener('mouseup', stop);
+            cv.addEventListener('touchstart', start); cv.addEventListener('touchmove', move); window.addEventListener('touchend', stop);
+        }
+        function clearSign() { cx.clearRect(0, 0, cv.width, cv.height); }
+
+        function submitForm(e) {
+            e.preventDefault();
+            document.getElementById('btn-submit-main').disabled = true;
+            document.getElementById('btn-submit-main').innerText = "Đang gửi dữ liệu...";
+
+            let riskColor = "GREEN";
+            let dangerousAnswers = [];
+            let fullAnswers = [];
+
+            const collect = (arr, code, grp) => {
+                arr.forEach((item, i) => {
+                    let val = document.querySelector(`input[name="${code}_${i}"]:checked`)?.value || "Không";
+                    fullAnswers.push({ group: grp, question: item, answer: val });
+                    if(val === "Có") {
+                        if(code === 'G1') riskColor = "RED";
+                        else if(riskColor !== "RED") riskColor = "YELLOW";
+                        dangerousAnswers.push(item);
+                    }
+                });
+            };
+
+            collect(LIST_G1, 'G1', 'Chống chỉ định');
+            collect(LIST_G2, 'G2', 'Cần báo Bác sĩ');
+            collect(LIST_G3, 'G3', 'Dị ứng/Bệnh nền');
+            collect(LIST_G4, 'G4', 'Vật dụng tháo bỏ');
+
+            const now = new Date();
+            const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} - ${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`;
+
+            const patientData = {
+                id: 'MRI-' + Date.now().toString().slice(-6),
+                time: timeStr,
+                timestamp: Date.now(),
+                name: document.getElementById('p-name').value.trim(),
+                age: document.getElementById('p-age').value,
+                phone: document.getElementById('p-phone').value,
+                height: document.getElementById('p-height').value || 'N/A',
+                weight: document.getElementById('p-weight').value || 'N/A',
+                reason: document.getElementById('p-reason').value,
+                history: document.getElementById('p-history').value,
+                agree: document.getElementById('p-agree').value,
+                color: riskColor,
+                status: "Chờ duyệt",
+                fullAnswers: fullAnswers,
+                dangerousAnswers: dangerousAnswers,
+                signature: cv.toDataURL()
+            };
+
+            // Lưu dữ liệu trực tiếp lên Firebase Realtime Database
+            db.ref('patients/' + patientData.id).set(patientData, (error) => {
+                if (error) {
+                    alert("Lỗi kết nối mạng, vui lòng thử lại!");
+                    document.getElementById('btn-submit-main').disabled = false;
+                } else {
+                    document.getElementById('form-container').style.display = 'none';
+                    document.getElementById('success-box').style.display = 'block';
+                    window.scrollTo(0,0);
+                }
+            });
+        }
+
+        window.onload = () => { loadQuestions(); setupCanvas(); };
+    </script>
+</body>
+</html>

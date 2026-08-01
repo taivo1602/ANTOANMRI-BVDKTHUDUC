@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Lý An Toàn MRI - BVĐK Thủ Đức</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f1f5f9; margin: 0; padding: 20px; color: #334155; }
+        .header { background: #1d4ed8; color: white; padding: 15px 20px; border-radius: 8px; font-size: 20px; font-weight: bold; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .panel { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .controls { display: flex; gap: 15px; margin-bottom: 20px; }
+        .controls input, .controls select { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+        th, td { padding: 10px; border: 1px solid #cbd5e1; text-align: left; }
+        th { background: #f8fafc; color: #1e3a8a; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; color: white; font-size: 11px; }
+        .badge-RED { background: #dc2626; }
+        .badge-YELLOW { background: #d97706; }
+        .badge-GREEN { background: #16a34a; }
+        .btn-view { background: #2563eb; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+    </style>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+</head>
+<body>
+
+    <div class="header">
+        <span>🖥️ BẢNG ĐIỀU HÀNH PHÒNG CHỤP MRI - THỜI GIAN THỰC</span>
+        <span id="connection-status" style="font-size: 13px; background: #16a34a; padding: 4px 8px; border-radius: 4px;">🟢 Đang kết nối Firebase</span>
+    </div>
+
+    <div class="panel">
+        <div class="controls">
+            <input type="text" id="search" placeholder="Tìm tên bệnh nhân / SĐT..." onkeyup="renderTable()">
+            <select id="filter-risk" onchange="renderTable()">
+                <option value="">Tất cả mức độ nguy cơ</option>
+                <option value="RED">ĐỎ (Chống chỉ định)</option>
+                <option value="YELLOW">VÀNG (Cần báo Bác sĩ)</option>
+                <option value="GREEN">XANH (An toàn)</option>
+            </select>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Thời gian</th>
+                    <th>Mã Hồ Sơ</th>
+                    <th>Họ và Tên</th>
+                    <th>Tuổi / SĐT</th>
+                    <th>Lý Do Đi Chụp</th>
+                    <th>Mức Nguy Cơ</th>
+                    <th>Hành Động</th>
+                </tr>
+            </thead>
+            <tbody id="patient-tbody">
+                <tr><td colspan="7" style="text-align:center;">Đang tải dữ liệu từ máy chủ...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // THAY MÃ FIREBASE CONFIG CỦA BẠN VÀO ĐÂY
+        const firebaseConfig = {
+  apiKey: "AIzaSyDjWIZl60JZlZjnFIEhezCFcomKS5OEQc4",
+  authDomain: "antoanconghuongtu.firebaseapp.com",
+  projectId: "antoanconghuongtu",
+  storageBucket: "antoanconghuongtu.firebasestorage.app",
+  messagingSenderId: "458456831621",
+  appId: "1:458456831621:web:f2936a421ca8303c5a7bec"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let allPatients = [];
+
+        // Tự động nhận dữ liệu realtime khi bệnh nhân gửi phiếu
+        db.ref('patients').on('value', (snapshot) => {
+            const data = snapshot.val();
+            allPatients = [];
+            if (data) {
+                Object.keys(data).forEach(key => {
+                    allPatients.unshift(data[key]);
+                });
+            }
+            renderTable();
+        });
+
+        function renderTable() {
+            const searchKw = document.getElementById('search').value.toLowerCase();
+            const riskFilter = document.getElementById('filter-risk').value;
+            const tbody = document.getElementById('patient-tbody');
+
+            const filtered = allPatients.filter(p => {
+                const matchSearch = p.name.toLowerCase().includes(searchKw) || p.phone.includes(searchKw) || p.id.toLowerCase().includes(searchKw);
+                const matchRisk = riskFilter === "" || p.color === riskFilter;
+                return matchSearch && matchRisk;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#94a3b8;">Không tìm thấy hồ sơ bệnh nhân nào.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(p => `
+                <tr>
+                    <td>${p.time}</td>
+                    <td><b>${p.id}</b></td>
+                    <td><b>${p.name}</b></td>
+                    <td>${p.age} tuổi - ${p.phone}</td>
+                    <td>${p.reason}</td>
+                    <td><span class="badge badge-${p.color}">${p.color}</span></td>
+                    <td><button class="btn-view" onclick="alert('Lý do: ${p.reason}\\nCảnh báo yếu tố nguy cơ: ${p.dangerousAnswers.join(', ') || 'Không có'}')">Xem chi tiết</button></td>
+                </tr>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
