@@ -1,153 +1,362 @@
 <!DOCTYPE html>
 <html lang="vi">
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Khai Báo An Toàn MRI - BVĐK Thủ Đức</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống An Toàn MRI - BỆNH VIỆN ĐA KHOA THỦ ĐỨC</title>
     <style>
-        * { box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background-color: #f8fafc; color: #334155; margin: 0; padding: 12px; }
-        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 18px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        h1 { color: #1e3a8a; font-size: 18px; text-align: center; margin-top: 0; text-transform: uppercase; }
-        .sub-title { text-align: center; color: #2563eb; font-size: 13px; font-weight: bold; margin-bottom: 15px; }
-        .info-note { background: #fffbeb; border-left: 4px solid #d97706; padding: 10px; font-size: 13px; margin-bottom: 15px; border-radius: 4px; }
-        .form-group { margin-bottom: 12px; display: flex; flex-direction: column; }
-        .form-group label { font-weight: bold; font-size: 13px; margin-bottom: 4px; color: #1e293b; }
-        .form-group input, .form-group select { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 15px; width: 100%; outline: none; -webkit-appearance: none; }
-        .form-row { display: flex; gap: 10px; }
-        .form-row .form-group { flex: 1; }
-        .group-header { padding: 8px 10px; color: white; font-weight: bold; font-size: 12px; text-transform: uppercase; border-radius: 6px; margin-top: 15px; margin-bottom: 8px; }
-        .bg-danger { background-color: #dc2626; }
-        .bg-warning { background-color: #d97706; }
-        .bg-info { background-color: #2563eb; }
-        .bg-secondary { background-color: #475569; }
-        .q-row { padding: 10px 0; border-bottom: 1px #e2e8f0 dashed; font-size: 13px; }
-        .q-text { font-weight: 500; margin-bottom: 6px; }
-        .q-options { display: flex; gap: 20px; }
-        .q-options label { display: flex; align-items: center; gap: 5px; font-weight: bold; cursor: pointer; }
-        .sign-area { border: 2px dashed #cbd5e1; background: #fafafa; border-radius: 6px; height: 130px; position: relative; margin-top: 5px; touch-action: none; }
-        .sign-area canvas { width: 100%; height: 100%; display: block; }
-        .btn-clear { position: absolute; bottom: 5px; right: 5px; background: #e2e8f0; border: none; padding: 4px 8px; font-size: 11px; border-radius: 4px; }
-        .btn-submit { width: 100%; background: #1d4ed8; color: white; border: none; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 8px; margin-top: 15px; cursor: pointer; }
-        .success-box { display: none; text-align: center; padding: 30px 10px; }
-        .success-box h2 { color: #16a34a; }
-    </style>
+        body { font-family: Arial, sans-serif; background-color: #f1f5f9; color: #334155; margin: 0; padding: 0; }
+        nav { background-color: #1d4ed8; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .nav-brand { font-weight: bold; font-size: 18px; }
+        .container { max-width: 1000px; margin: 20px auto; padding: 0 15px; }
+        .panel { background: white; border-radius: 8px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; margin-bottom: 25px; }
+        .hidden-section { display: none !important; }
+        .header-container { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #1d4ed8; padding-bottom: 15px; margin-bottom: 20px; }
+        .header-text { flex: 1; text-align: left; }
+        .header-text h1 { color: #1e3a8a; margin: 0; font-size: 22px; text-transform: uppercase; line-height: 1.3; font-weight: bold; }
+        .header-text p { margin: 5px 0 0 0; font-weight: bold; color: #1d4ed8; font-style: italic; font-size: 14px; }
+        .info-note { background-color: #f8fafc; border-left: 4px solid #d97706; padding: 12px; margin-bottom: 20px; font-size: 13.5px; line-height: 1.5; color: #334155; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group.full-width { grid-column: span 2; }
+        .form-group label { font-size: 14px; font-weight: bold; margin-bottom: 5px; color: #475569; }
+        .form-group input, .form-group select, .form-group textarea { padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size:16px; font-family: inherit; touch-action:manipulation; -webkit-user-select:text; user-select:text; -webkit-appearance:none; appearance:none; }
+        .group-header { padding: 10px; color: white; font-weight: bold; font-size: 13.5px; text-transform: uppercase; border-radius: 4px; margin-top: 25px; margin-bottom: 10px; }
+        .bg-danger-mri { background-color: #b91c1c; }
+        .bg-warning-mri { background-color: #d97706; }
+        .bg-info-mri { background-color: #2563eb; }
+        .bg-secondary-mri { background-color: #475569; }
+        .q-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 10px; border-bottom: 1px dashed #cbd5e1; font-size: 13.5px; }
+        .q-text-wrapper { flex: 1; padding-right: 15px; }
+        .q-options { display: flex; gap: 15px; }
+        .q-options label { font-weight: bold; cursor: pointer; border: 1px solid #cbd5e1; padding: 5px 10px; border-radius: 4px; background: #f8fafc; }
+        .commitment-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 6px; margin-top: 25px; font-size: 13.5px; }
+        .commitment-box ul { margin: 8px 0 0 0; padding-left: 20px; line-height: 1.6; }
+        .sign-area { border: 2px dashed #cbd5e1; background: #fafafa; border-radius: 6px; height: 120px; position: relative; margin-top: 8px; }
+        .sign-area canvas { width:100%; height:100%; display:block; cursor:crosshair; touch-action:none; }
+        .btn-clear { position: absolute; bottom: 8px; right: 8px; background: #e2e8f0; border: none; padding: 4px 8px; font-size: 11px; cursor: pointer; border-radius: 4px; }
+        .btn-submit { width: 100%; background-color: #1d4ed8; color: white; border: none; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 20px; }
+        
+        .table-title-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1d4ed8; padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+        .table-title-bar h3 { font-size: 16px; color: #1e3a8a; margin: 0; font-weight: bold; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+        
+        .filter-controls { display: flex; gap: 10px; align-items: center; }
+        .filter-controls input, .filter-controls select { padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; outline: none; }
+        .btn-export-excel { background-color: #16a34a; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; }
 
-    <!-- Firebase SDK v9 -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { padding: 10px; border: 1px solid #cbd5e1; text-align: left; vertical-align: middle; }
+        th { background-color: #f1f5f9; color: #1e3a8a; font-weight: bold; }
+        
+        .badge { padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; color: white; display: inline-block; text-align: center; }
+        .badge-red { background-color: #dc2626; }
+        .badge-yellow { background-color: #d97706; }
+        .badge-green { background-color: #16a34a; }
+
+        .status-badge { font-weight: bold; font-size: 13px; }
+        .status-approved { color: #16a34a; }
+        .status-paused { color: #d97706; }
+
+        .action-btns { display: flex; gap: 5px; flex-wrap: wrap; }
+        .btn-action-view { background-color: #2563eb; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
+        .btn-action-pause { background-color: #d97706; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
+        .btn-action-approve { background-color: #16a34a; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
+
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-content { background: white; padding: 25px; border-radius: 8px; max-width: 900px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative; }
+        .modal-close { position: absolute; top: 15px; right: 15px; background: #64748b; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-modal-print { background-color: #16a34a; color: white; border: none; padding: 10px; font-size: 14px; font-weight: bold; border-radius: 4px; cursor: pointer; flex: 1; }
+        .btn-modal-json { background-color: #475569; color: white; border: none; padding: 10px; font-size: 14px; font-weight: bold; border-radius: 4px; cursor: pointer; flex: 1; }
+
+        #ai-chat-toggle { position: fixed; bottom: 20px; right: 20px; background-color: #1d4ed8; color: white; border: none; border-radius: 50px; padding: 12px 20px; font-size: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 3000; display: flex; align-items: center; gap: 8px; }
+        #ai-chat-box { position: fixed; bottom: 85px; right: 20px; width: 360px; height: 500px; background: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); border: 1px solid #cbd5e1; z-index: 3000; display: flex; flex-direction: column; overflow: hidden; }
+        .ai-chat-header { background-color: #1d4ed8; color: white; padding: 12px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+        .ai-chat-close { background: none; border: none; color: white; font-size: 16px; cursor: pointer; font-weight: bold; }
+        .ai-chat-messages { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #f8fafc; font-size: 13.5px; }
+        .ai-message { max-width: 85%; padding: 10px 12px; border-radius: 8px; line-height: 1.4; word-wrap: break-word; }
+        .ai-message.bot { background: #e2e8f0; color: #1e293b; align-self: flex-start; }
+        .ai-message.user { background: #1d4ed8; color: white; align-self: flex-end; }
+        .ai-chat-input-area { display: flex; padding: 10px; background: white; border-top: 1px solid #e2e8f0; gap: 8px; }
+        .ai-chat-input-area input { flex: 1; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; outline: none; }
+        .ai-chat-input-area button { background-color: #1d4ed8; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+        @media print { 
+            nav, button, .no-print, .manager-section, .modal-close, .modal-actions, .btn-clear, #ai-chat-toggle, #ai-chat-box { display: none !important; } 
+            body { background: white; color: black; }
+            .modal { position: absolute; left: 0; top: 0; background: white; display: block; height: auto; overflow: visible; }
+            .modal-content { 
+                box-shadow: none !important; 
+                border: none !important; 
+                padding: 0 !important; 
+                width: 100% !important; 
+                max-height: none !important; 
+                overflow: visible !important; 
+            }
+            #modal-full-answers {
+                max-height: none !important;
+                overflow: visible !important;
+                border: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+            }
+            .panel { box-shadow: none; border: none; padding: 0; }
+        }
+    </style>
 </head>
 <body>
 
-    <div class="container" id="form-container">
-        <h1>HƯỚNG DẪN AN TOÀN MRI</h1>
-        <div class="sub-title">BỆNH VIỆN ĐA KHOA THỦ ĐỨC</div>
+    <nav class="no-print">
+        <div class="nav-brand">🧲 HỆ THỐNG AN TOÀN MRI - BỆNH VIỆN ĐA KHOA THỦ ĐỨC</div>
+    </nav>
 
-        <div class="info-note">
-            ⚠️ <b>LƯU Ý quan trọng:</b> Phòng chụp MRI có từ trường rất mạnh. Vui lòng khai báo trung thực các vật dụng kim loại hoặc thiết bị cấy ghép trên cơ thể.
-        </div>
-
-        <form id="patient-form" onsubmit="submitForm(event)">
-            <div class="form-group">
-                <label>Họ và tên bệnh nhân <span style="color:red">*</span></label>
-                <input type="text" id="p-name" required placeholder="Nhập đầy đủ họ tên">
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Tuổi <span style="color:red">*</span></label>
-                    <input type="number" id="p-age" required placeholder="Ví dụ: 30">
-                </div>
-                <div class="form-group">
-                    <label>Số điện thoại <span style="color:red">*</span></label>
-                    <input type="tel" id="p-phone" required placeholder="SĐT liên hệ">
+    <div class="container">
+        <!-- FORM KHAI BÁO CỦA BỆNH NHÂN -->
+        <section class="panel">
+            <div class="header-container">
+                <div class="header-text">
+                    <h1>HƯỚNG DẪN AN TOÀN</h1>
+                    <p>Áp dụng trước khi chụp Cộng hưởng từ MRI - Bệnh viện Đa khoa Thủ Đức</p>
+                    <span style="font-size:12px; color:#475569; font-weight:bold;">Chuyên nghiệp – Tận tâm – Vươn tầm chất lượng</span>
                 </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Chiều cao (cm)</label>
-                    <input type="number" id="p-height" placeholder="165">
+            <div class="info-note">
+                <strong>Thông tin cung cấp cho bệnh nhân trước khi chụp Cộng hưởng từ (CHT):</strong><br>
+                Máy Cộng hưởng từ - MRI là một khối nam châm có từ trường rất mạnh, bệnh nhân phải nằm trong phòng kín. Các đồ vật, phương tiện, dụng cụ cấy ghép có chứa hợp chất kim loại trên và trong cơ thể người bệnh có thể bị hỏng, gây ảnh hưởng cho người bệnh, những người xung quanh hoặc gây tổn hại cho hệ thống máy móc. 
+                <br><strong style="color:#b91c1c;">VÌ VẬY, BỆNH NHÂN TUYỆT ĐỐI KHÔNG ĐƯỢC VÀO PHÒNG CỘNG HƯỞNG TỪ (MRI) NẾU KHÔNG CÓ NGƯỜI HƯỚNG DẪN.</strong> Nếu có bất kỳ câu hỏi nào, xin vui lòng trao đổi với Kỹ thuật viên trước khi bước vào phòng chụp MRI.
+            </div>
+
+            <form id="mri-safety-form" onsubmit="submitForm(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Họ và tên bệnh nhân: <span style="color:red">*</span></label>
+                        <input type="text" id="p-name" autocomplete="name" required placeholder="Nguyễn Văn A">
+                    </div>
+                    <div class="form-group">
+                        <label>Tuổi: <span style="color:red">*</span></label>
+                        <input type="number" id="p-age" inputmode="numeric" required placeholder="Ví dụ: 30">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Cân nặng (kg)</label>
-                    <input type="number" id="p-weight" placeholder="60">
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Chiều cao (cm): <span style="color:red">*</span></label>
+                        <input type="number" id="p-height" inputmode="numeric" required placeholder="Ví dụ: 165">
+                    </div>
+                    <div class="form-group">
+                        <label>Cân nặng (kg): <span style="color:red">*</span></label>
+                        <input type="number" id="p-weight" inputmode="numeric" required placeholder="Ví dụ: 60">
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Số điện thoại: <span style="color:red">*</span></label>
+                        <input type="tel" id="p-phone" autocomplete="tel" inputmode="tel" required placeholder="Số điện thoại liên lạc">
+                    </div>
+                    <div class="form-group">
+                        <label>Đã từng chụp Cộng hưởng từ trước đây chưa? <span style="color:red">*</span></label>
+                        <select id="p-history-mri" required>
+                            <option value="">-- Chọn đáp án --</option>
+                            <option value="Có">Có</option>
+                            <option value="Không">Không</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Ô THÊM: BỆNH NHÂN TỰ NHẬP LÝ DO ĐI CHỤP -->
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label> LÝ DO CHỤP MRI, VỊ TRÍ ĐAU, THỜI GIAN XUẤT HIỆN TRIỆU CHỨNG: <span style="color:red">*</span></label>
+                        <input type="text" id="p-reason" required placeholder="Ví dụ: Đau đầu kéo dài, Chụp cột sống cổ, v.v.">
+                    </div>
+                </div>
+
+                <div class="group-header bg-danger-mri">🛑 NHÓM TUYỆT ĐỐI CHỐNG CHỈ ĐỊNH (CÓ = ĐỎ)</div>
+                <div id="group-1"></div>
+
+                <div class="group-header bg-warning-mri">⚠️ NHÓM CẦN BÁO BÁC SĨ/KTV (CÓ = VÀNG)</div>
+                <div id="group-2"></div>
+
+                <div class="group-header bg-info-mri">🧪 NHÓM TIỀN SỬ DỊ ỨNG & BỆNH NỀN (CÓ = VÀNG)</div>
+                <div id="group-3"></div>
+
+                <div class="group-header bg-secondary-mri">📌 NHÓM VẬT DỤNG PHẢI THÁO BỎ TRƯỚC KHI VÀO PHÒNG</div>
+                <div id="group-4"></div>
+
+                <div class="commitment-box">
+                    <label style="color:#b91c1c; font-weight:bold; font-size:14px;">Ý KIẾN QUYẾT ĐỊNH CỦA BỆNH NHÂN: <span style="color:red">*</span></label>
+                    <div style="margin: 8px 0;">
+                        <label style="color:#16a34a; font-weight:bold; margin-right:20px; cursor:pointer;"><input type="radio" name="agreement" value="ĐỒNG Ý" required> Tôi ĐỒNG Ý chụp cộng hưởng từ và tiêm thuốc đối quang từ (nếu cần)</label>
+                        <br><br>
+                        <label style="color:#dc2626; font-weight:bold; cursor:pointer;"><input type="radio" name="agreement" value="KHÔNG ĐỒNG Ý"> Tôi KHÔNG ĐỒNG Ý thực hiện chụp</label>
+                    </div>
+                    
+                    <strong>Tôi đã tìm hiểu về AN TOÀN CỘNG HƯỞNG TỪ và được tư vấn, giải thích. Tôi cam kết như sau:</strong>
+                    <ul>
+                        <li>Đã hiểu rõ về lợi ích và những vấn đề bất thường, các rủi ro có thể xảy ra trong quá trình chụp MRI và tiêm thuốc đối quang từ (nếu cần).</li>
+                        <li>Không khiếu nại, khiếu kiện các rủi ro (nếu có) và những vấn đề liên quan trong quá trình thực hiện chụp MRI và tiêm thuốc đối quang từ (nếu có).</li>
+                        <li>Tôn trọng nhân viên y tế và tuân thủ các nội quy/ quy định của bệnh viện trong quá trình thực hiện dịch vụ.</li>
+                        <li>Hợp tác đầy đủ với nhân viên y tế và cung cấp trung thực, đầy đủ các thông tin tình trạng sức khỏe.</li>
+                    </ul>
+                </div>
+
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>Bệnh nhân hoặc người đại diện ký tên vào khung dưới đây: <span style="color:red">*</span></label>
+                    <div class="sign-area">
+                        <canvas id="signature-canvas"></canvas>
+                        <button type="button" class="btn-clear" onclick="clearSign()">Xóa ký lại</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">🚀 GỬI PHIẾU XÁC NHẬN AN TOÀN</button>
+            </form>
+        </section>
+
+        <!-- BẢNG QUẢN LÝ DÀNH CHO KỸ THUẬT VIÊN PHÒNG MRI -->
+        <section class="panel manager-section">
+            <div class="table-title-bar">
+                <h3>📋 DANH SÁCH BỆNH NHÂN ĐÃ KHAI BÁO (THỜI GIAN THỰC)</h3>
+                <div class="filter-controls">
+                    <input type="text" id="search-input" placeholder="Tìm tên / mã BN / lý do..." onkeyup="filterTable()">
+                    <select id="filter-level" onchange="filterTable()">
+                        <option value="">Tất cả mức độ</option>
+                        <option value="RED">RED</option>
+                        <option value="YELLOW">YELLOW</option>
+                        <option value="GREEN">GREEN</option>
+                    </select>
+                    <button class="btn-export-excel" onclick="exportDataExcel()">📊 Xuất Excel</button>
                 </div>
             </div>
-
-            <div class="form-group">
-                <label>Lý do đi chụp / Vị trí đau <span style="color:red">*</span></label>
-                <input type="text" id="p-reason" required placeholder="Ví dụ: Đau đầu, Chụp cột sống cổ...">
+            
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">Thời gian</th>
+                            <th style="width: 20%;">Họ Tên & Mã BN</th>
+                            <th style="width: 22%;">Lý Do Đi Chụp</th>
+                            <th style="width: 15%;">Thông Tin Chi Tiết</th>
+                            <th style="width: 10%;">Mức Nguy Cơ</th>
+                            <th style="width: 10%;">Trạng Thái</th>
+                            <th style="width: 8%;">Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="result-tbody">
+                        <tr><td colspan="7" style="text-align:center; color:#94a3b8;">Chưa có dữ liệu nào được ghi nhận.</td></tr>
+                    </tbody>
+                </table>
             </div>
-
-            <div class="form-group">
-                <label>Đã từng chụp MRI trước đây chưa?</label>
-                <select id="p-history">
-                    <option value="Chưa">Chưa</option>
-                    <option value="Rồi">Rồi</option>
-                </select>
-            </div>
-
-            <div class="group-header bg-danger">🛑 NHÓM CHỐNG CHỈ ĐỊNH TUYỆT ĐỐI</div>
-            <div id="group-1"></div>
-
-            <div class="group-header bg-warning">⚠️ NHÓM CẦN BÁO BÁC SĨ / KTV</div>
-            <div id="group-2"></div>
-
-            <div class="group-header bg-info">🧪 TIỀN SỬ DỊ ỨNG & BỆNH NỀN</div>
-            <div id="group-3"></div>
-
-            <div class="group-header bg-secondary">📌 THÁO BỎ VẬT DỤNG KIM LOẠI</div>
-            <div id="group-4"></div>
-
-            <div class="form-group" style="margin-top:15px;">
-                <label>Đồng ý thực hiện chụp MRI:</label>
-                <select id="p-agree">
-                    <option value="ĐỒNG Ý">ĐỒNG Ý chụp MRI và tiêm thuốc (nếu cần)</option>
-                    <option value="KHÔNG ĐỒNG Ý">KHÔNG ĐỒNG Ý</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Chữ ký bệnh nhân / Người nhà <span style="color:red">*</span></label>
-                <div class="sign-area">
-                    <canvas id="signature-canvas"></canvas>
-                    <button type="button" class="btn-clear" onclick="clearSign()">Xóa ký lại</button>
-                </div>
-            </div>
-
-            <button type="submit" class="btn-submit" id="btn-submit-main">🚀 GỬI PHIẾU XÁC NHẬN</button>
-        </form>
+        </section>
     </div>
 
-    <div class="container success-box" id="success-box">
-        <h2>✅ KHAI BÁO THÀNH CÔNG!</h2>
-        <p>Thông tin của quý khách đã được chuyển trực tiếp tới Kỹ thuật viên phòng MRI.</p>
-        <p>Vui lòng ngồi đợi tại phòng chờ đến lượt gọi tên.</p>
+    <!-- CỬA SỔ XEM CHI TIẾT PHÁP LÝ -->
+    <div id="detail-modal" class="modal hidden-section">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">Đóng X</button>
+            <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px;">
+                <h2 style="margin: 0; color: #1e3a8a; text-transform: uppercase; font-size:18px;">BẢNG KHAI BÁO-CAM KẾT AN TOÀN CỘNG HƯỞNG TỪ (MRI)</h2>
+                <p style="margin: 5px 0 0 0; font-size: 13px; font-weight: bold; color: #1d4ed8;">BỆNH VIỆN ĐA KHOA THỦ ĐỨC</p>
+            </div>
+            
+            <div id="modal-patient-info" style="line-height: 1.7; font-size: 13.5px; margin-bottom: 15px;"></div>
+            
+            <h4 style="border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-top: 15px; color:#1e3a8a; font-size:14px;">📋 CÂU TRẢ LỜI SÀNG LỌC AN TOÀN CỦA BỆNH NHÂN:</h4>
+            <div id="modal-full-answers" style="max-height: none !important; overflow: visible !important; border: 1px solid #cbd5e1; padding: 12px; border-radius: 4px; font-size: 13px; margin-bottom: 15px; background: #fafafa;"></div>
+
+            <h4 style="border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-top: 15px; color:#b91c1c; font-size:14px;">⚠️ CÁC DỊ VẬT / CẤY GHÉP VÀ NGUY CƠ ĐƯỢC GHI NHẬN:</h4>
+            <ul id="modal-danger-list" style="padding-left:20px; color:#b91c1c; font-weight:bold; font-size:13px; line-height:1.5;"></ul>
+            
+            <div style="margin-top: 25px; display: flex; justify-content: space-between;">
+                <div style="text-align: center; width: 45%; font-size:13px;"><strong>BÁC SĨ / KTV PHÒNG MRI</strong><br><br><br><br><span>(Ký, ghi rõ họ tên)</span></div>
+                <div style="text-align: center; width: 45%; font-size:13px;">
+                    <strong>BỆNH NHÂN / NGƯỜI ĐẠI DIỆN</strong><br>
+                    <div style="margin-top: 5px; height: 60px;"><img id="modal-signature-img" src="" alt="Chữ ký" style="max-height:55px;"></div>
+                    <span id="modal-signature-name" style="font-weight: bold;"></span>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-modal-print" onclick="window.print()">🖨️ IN</button>
+                <button class="btn-modal-json" onclick="exportSinglePatientJSON()">📥 Xuất JSON Chi Tiết</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TÍCH HỢP CHATBOX AI KỸ THUẬT VIÊN MRI -->
+    <button id="ai-chat-toggle" onclick="toggleChatBox()">💬 GIẢI ĐÁP THẮC MẮC</button>
+    <div id="ai-chat-box" class="hidden-section">
+        <div class="ai-chat-header">
+            <span>🤖 Trợ Lý KTV MRI AI</span>
+            <button class="ai-chat-close" onclick="toggleChatBox()">✕</button>
+        </div>
+        <div class="ai-chat-messages" id="ai-chat-messages">
+            <div class="ai-message bot">Xin chào! Tôi là trợ lý AI mô phỏng kỹ thuật viên MRI Bệnh viện Đa khoa Thủ Đức. Bạn có thắc mắc gì về an toàn, quy trình chụp MRI hay các thiết bị cấy ghép không? Hãy hỏi tôi nhé!</div>
+        </div>
+        <div class="ai-chat-input-area">
+            <input type="text" id="ai-chat-input" placeholder="Nhập câu hỏi của bạn..." onkeypress="handleChatKeyPress(event)">
+            <button onclick="sendChatMessage()">Gửi</button>
+        </div>
     </div>
 
     <script>
-        // CẤU HÌNH FIREBASE CỦA BẠN TẠI ĐÂY
-        const firebaseConfig = {
-  apiKey: "AIzaSyDjWIZl60JZlZjnFIEhezCFcomKS5OEQc4",
-  authDomain: "antoanconghuongtu.firebaseapp.com",
-  projectId: "antoanconghuongtu",
-  storageBucket: "antoanconghuongtu.firebasestorage.app",
-  messagingSenderId: "458456831621",
-  appId: "1:458456831621:web:f2936a421ca8303c5a7bec"
-};
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+const firebaseConfig = {
 
-        const LIST_G1 = ["Máy cấy ghép điện cực ốc tai, máy kích thích thần kinh.", "Dị vật kim loại trong mắt, phẫu thuật mắt.", "Máy tạo nhịp tim (Pacemaker/ICD).", "Mang thai dưới 3 tháng.", "Mảnh đạn vùng đầu / gần mạch máu lớn.", "Sợ phòng kín (Claustrophobia)."];
-        const LIST_G2 = ["Van tim nhân tạo, Stent mạch vành.", "Dụng cụ cấy ghép xương ức.", "Metal clips phình mạch脑.", "Bơm tiêm Insulin tự động.", "Có hình xăm trên cơ thể."];
-        const LIST_G3 = ["Tiền sử dị ứng thuốc đối quang từ (Gadolinium).", "Suy thận nặng (Độ 4, 5).", "Bệnh tiểu đường, hen suyễn."];
-        const LIST_G4 = ["Tháo bỏ: Răng giả, đồng hồ, trang sức, ví tiền, thẻ ATM, chìa khóa..."];
+ apiKey:"...",
+
+ authDomain:"...",
+
+ databaseURL:"...",
+
+ projectId:"...",
+
+ storageBucket:"...",
+
+ messagingSenderId:"...",
+
+ appId:"..."
+
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db=firebase.database();
+        const LIST_G1 = [
+            "Máy cấy ghép điện cực ốc tai, máy tạo xung kích thích thần kinh.",
+            "Dị vật kim loại trong nhãn cầu, tiền sử chấn thương phẫu thuật mắt.",
+            "Máy tạo nhịp tim, máy chống rung tim (Pacemaker/ICD).",
+            "Phụ nữ đang mang thai hoặc nghi ngờ có thai dưới 3 tháng.",
+            "Mảnh đạn vùng đầu hay gần vùng mạch máu lớn.",
+            "Khách hàng hay lo lắng hoặc mắc chứng sợ phòng kín (Claustrophobia)."
+        ];
+        const LIST_G2 = [
+            "Các loại van tim nhân tạo, stents mạch vành.",
+            "Dụng cụ cấy ghép xương ức, máy kích thích phát triển xương.",
+            "Metal clips cầm máu phình mạch não.",
+            "Thiết bị cấy ghép chống trào ngược dạ dày / Bơm tiêm Insulin.",
+            "Có hình xăm."
+        ];
+        const LIST_G3 = [
+            "Đã từng chụp MRI có tiêm thuốc tương phản từ chưa?",
+            "Đã từng bị phản ứng dị ứng thuốc đối quang từ (Gadolinium), hải sản, kháng sinh?",
+            "Có tiền sử bệnh thận nặng: suy thận độ 4, 5?",
+            "Có bị tiểu đường, hen suyễn."
+        ];
+        const LIST_G4 = [
+            "Tất cả vật dụng, đồ dùng cá nhân: Răng giả, đồng hồ, kẹp tóc, kim tây, ví tiền, thẻ ATM,..."
+        ];
+
+        let database = [];
+        let currentSelectedModalIndex = null;
 
         function loadQuestions() {
             const makeRows = (arr, code) => arr.map((item, index) => `
                 <div class="q-row">
-                    <div class="q-text">${item}</div>
+                    <div class="q-text-wrapper"><span>🔹 ${item}</span></div>
                     <div class="q-options">
                         <label><input type="radio" name="${code}_${index}" value="Có" required> <span style="color:#dc2626;">Có</span></label>
                         <label><input type="radio" name="${code}_${index}" value="Không" required> <span style="color:#16a34a;">Không</span></label>
@@ -165,34 +374,30 @@
             cv = document.getElementById('signature-canvas'); cx = cv.getContext('2d');
             cv.width = cv.parentElement.offsetWidth; cv.height = cv.parentElement.offsetHeight;
             cx.lineWidth = 3; cx.lineCap = 'round'; cx.strokeStyle = '#1e3a8a';
-            const getPos = (e) => {
-                let r = cv.getBoundingClientRect();
-                let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                let clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                return { x: clientX - r.left, y: clientY - r.top };
-            };
-            const start = (e) => { active = true; cx.beginPath(); let p = getPos(e); cx.moveTo(p.x, p.y); };
-            const move = (e) => { if(!active) return; let p = getPos(e); cx.lineTo(p.x, p.y); cx.stroke(); };
-            const stop = () => active = false;
-
-            cv.addEventListener('mousedown', start); cv.addEventListener('mousemove', move); window.addEventListener('mouseup', stop);
-            cv.addEventListener('touchstart', start); cv.addEventListener('touchmove', move); window.addEventListener('touchend', stop);
+            const getPos = (e) => { let r = cv.getBoundingClientRect(); return { x: (e.clientX || e.touches[0].clientX) - r.left, y: (e.clientY || e.touches[0].clientY) - r.top }; };
+            cv.onmousedown = (e) => { active = true; cx.beginPath(); let p = getPos(e); cx.moveTo(p.x, p.y); };
+            cv.onmousemove = (e) => { if(!active) return; let p = getPos(e); cx.lineTo(p.x, p.y); cx.stroke(); };
+            window.onmouseup = () => active = false;
+            cv.ontouchstart = (e) => { active = true; cx.beginPath(); let p = getPos(e); cx.moveTo(p.x, p.y); };
+            cv.ontouchmove = (e) => { if(!active) return; e.preventDefault(); let p = getPos(e); cx.lineTo(p.x, p.y); cx.stroke(); };
+            window.ontouchend = () => active = false;
         }
         function clearSign() { cx.clearRect(0, 0, cv.width, cv.height); }
 
+        function //loadFromLocalStorage(); {
+            const stored = localStorage.getItem('mri_offline_db_thuduc_v4');
+            if (stored) { database = JSON.parse(stored); renderTable(); }
+        }
+
         function submitForm(e) {
             e.preventDefault();
-            document.getElementById('btn-submit-main').disabled = true;
-            document.getElementById('btn-submit-main').innerText = "Đang gửi dữ liệu...";
+            let riskColor = "GREEN"; let dangerousAnswers = [];
+            let fullAnswersRecord = [];
 
-            let riskColor = "GREEN";
-            let dangerousAnswers = [];
-            let fullAnswers = [];
-
-            const collect = (arr, code, grp) => {
+            const collectGroup = (arr, code, groupName) => {
                 arr.forEach((item, i) => {
-                    let val = document.querySelector(`input[name="${code}_${i}"]:checked`)?.value || "Không";
-                    fullAnswers.push({ group: grp, question: item, answer: val });
+                    let val = document.querySelector(`input[name="${code}_${i}"]:checked`)?.value || "Không rõ";
+                    fullAnswersRecord.push({ group: groupName, question: item, answer: val });
                     if(val === "Có") {
                         if(code === 'G1') riskColor = "RED";
                         else if(riskColor !== "RED") riskColor = "YELLOW";
@@ -201,47 +406,216 @@
                 });
             };
 
-            collect(LIST_G1, 'G1', 'Chống chỉ định');
-            collect(LIST_G2, 'G2', 'Cần báo Bác sĩ');
-            collect(LIST_G3, 'G3', 'Dị ứng/Bệnh nền');
-            collect(LIST_G4, 'G4', 'Vật dụng tháo bỏ');
+            collectGroup(LIST_G1, 'G1', 'Tuyệt đối chống chỉ định');
+            collectGroup(LIST_G2, 'G2', 'Cần báo bác sĩ/KTV');
+            collectGroup(LIST_G3, 'G3', 'Tiền sử dị ứng & bệnh nền');
+            collectGroup(LIST_G4, 'G4', 'Vật dụng phải tháo bỏ');
 
             const now = new Date();
-            const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} - ${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`;
+            const timeStr = String(now.getHours()).padStart(2,'0') + ":" + String(now.getMinutes()).padStart(2,'0') + ":" + String(now.getSeconds()).padStart(2,'0') + "<br>" + String(now.getDate()).padStart(2,'0') + "/" + String(now.getMonth()+1).padStart(2,'0') + "/" + now.getFullYear();
 
-            const patientData = {
+            const payload = {
                 id: 'MRI-' + Date.now().toString().slice(-6),
                 time: timeStr,
-                timestamp: Date.now(),
-                name: document.getElementById('p-name').value.trim(),
-                age: document.getElementById('p-age').value,
-                phone: document.getElementById('p-phone').value,
-                height: document.getElementById('p-height').value || 'N/A',
-                weight: document.getElementById('p-weight').value || 'N/A',
-                reason: document.getElementById('p-reason').value,
-                history: document.getElementById('p-history').value,
-                agree: document.getElementById('p-agree').value,
+                timePlain: `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')} ${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`,
+                name: document.getElementById('p-name').value.toLowerCase(), 
+                age: document.getElementById('p-age').value, 
+                phone: document.getElementById('p-phone').value, 
+                height: document.getElementById('p-height').value, 
+                weight: document.getElementById('p-weight').value,
+                history: document.getElementById('p-history-mri').value, 
+                reason: document.getElementById('p-reason').value, // Thêm lưu lý do đi chụp
                 color: riskColor,
-                status: "Chờ duyệt",
-                fullAnswers: fullAnswers,
-                dangerousAnswers: dangerousAnswers,
+                status: "Đã duyệt",
+                agree: document.querySelector('input[name="agreement"]:checked').value === "ĐỒNG Ý" ? "ĐỒNG Ý chụp MRI và tiêm đối quang từ" : "KHÔNG ĐỒNG Ý thực hiện chụp",
+                fullAnswers: fullAnswersRecord,
+                dangerousAnswers: dangerousAnswers, 
                 signature: cv.toDataURL()
             };
 
-            // Lưu dữ liệu trực tiếp lên Firebase Realtime Database
-            db.ref('patients/' + patientData.id).set(patientData, (error) => {
-                if (error) {
-                    alert("Lỗi kết nối mạng, vui lòng thử lại!");
-                    document.getElementById('btn-submit-main').disabled = false;
-                } else {
-                    document.getElementById('form-container').style.display = 'none';
-                    document.getElementById('success-box').style.display = 'block';
-                    window.scrollTo(0,0);
-                }
-            });
+            db.ref("patients/"+payload.id)
+
+.set(payload)
+
+.then(()=>{
+
+alert("Đã gửi thành công!");
+
+document.getElementById("mri-safety-form").reset();
+
+clearSign();
+
+})
+
+.catch(error=>{
+
+alert(error.message);
+
+});
         }
 
-        window.onload = () => { loadQuestions(); setupCanvas(); };
+        function renderTable(dataToRender = database) {
+            const tbody = document.getElementById('result-tbody');
+            if(dataToRender.length === 0) { 
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#94a3b8;">Không tìm thấy bệnh nhân phù hợp.</td></tr>`; 
+                return; 
+            }
+            
+            tbody.innerHTML = dataToRender.map((p) => {
+                let realIndex = database.findIndex(item => item.id === p.id);
+                let badgeClass = p.color === 'RED' ? 'badge-red' : p.color === 'YELLOW' ? 'badge-yellow' : 'badge-green';
+                let statusClass = p.status === 'Đã duyệt' ? 'status-approved' : 'status-paused';
+                let toggleStatusBtnText = p.status === 'Đã duyệt' ? 'Tạm dừng' : 'Duyệt';
+                let toggleStatusBtnClass = p.status === 'Đã duyệt' ? 'btn-action-pause' : 'btn-action-approve';
+
+                return `<tr>
+                    <td>${p.time}</td>
+                    <td><strong>${p.name}</strong><br><span style="color:#64748b; font-size:12px;">SĐT: ${p.phone}</span></td>
+                    <td><span style="color:#1e3a8a; font-weight:bold;">${p.reason || 'Không có'}</span></td>
+                    <td>Tuổi: ${p.age} | Cao: ${p.height}cm | Nặng: ${p.weight}kg</td>
+                    <td><span class="badge ${badgeClass}">${p.color}</span></td>
+                    <td><span class="status-badge ${statusClass}">${p.status}</span></td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="btn-action-view" onclick="openDetail(${realIndex})">Xem-in</button>
+                            <button class="${toggleStatusBtnClass}" onclick="toggleStatus(${realIndex})">${toggleStatusBtnText}</button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function filterTable() {
+            let keyword = document.getElementById('search-input').value.toLowerCase();
+            let levelFilter = document.getElementById('filter-level').value;
+
+            let filtered = database.filter(p => {
+                let matchText = p.name.includes(keyword) || p.phone.includes(keyword) || p.id.toLowerCase().includes(keyword) || (p.reason && p.reason.toLowerCase().includes(keyword));
+                let matchLevel = levelFilter === "" || p.color === levelFilter;
+                return matchText && matchLevel;
+            });
+
+            renderTable(filtered);
+        }
+
+        function toggleStatus(index) {
+            database[index].status = database[index].status === 'Đã duyệt' ? 'Đã tạm dừng' : 'Đã duyệt';
+            localStorage.setItem('mri_offline_db_thuduc_v4', JSON.stringify(database));
+            filterTable();
+        }
+
+        function openDetail(index) {
+            currentSelectedModalIndex = index;
+            const p = database[index]; 
+            document.getElementById('modal-signature-name').innerText = p.name;
+            document.getElementById('modal-patient-info').innerHTML = `
+                <strong>Mã hồ sơ:</strong> ${p.id} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Thời gian:</strong> ${p.timePlain} <br>
+                <strong>Họ và tên bệnh nhân:</strong> ${p.name} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Tuổi:</strong> ${p.age} tuổi <br>
+                <strong>Số điện thoại:</strong> ${p.phone} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Đã chụp CHT trước đây:</strong> ${p.history} <br>
+                <strong>Lý do đi chụp:</strong> <span style="color:#b91c1c; font-weight:bold;">${p.reason || 'Không có'}</span> <br>
+                <strong>Thể trạng:</strong> Cao ${p.height} cm &nbsp;&nbsp;|&nbsp;&nbsp; Nặng ${p.weight} kg <br>
+                <strong>Trạng thái:</strong> ${p.status} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Mức nguy cơ:</strong> ${p.color} <br>
+                <strong>Ý kiến cam kết quyết định:</strong> <span style="font-weight:bold; color:#1e3a8a;">${p.agree}</span>
+            `;
+
+            const fullAnswersDiv = document.getElementById('modal-full-answers');
+            if (p.fullAnswers && p.fullAnswers.length > 0) {
+                fullAnswersDiv.innerHTML = p.fullAnswers.map(item => {
+                    let isCo = item.answer === 'Có';
+                    return `
+                        <div style="border-bottom: 1px solid #e2e8f0; padding: 7px 0; display: flex; justify-content: space-between; align-items: center; page-break-inside: avoid;">
+                            <span style="flex: 1; padding-right: 10px;"><b>[${item.group}]</b> ${item.question}</span>
+                            <div style="display: flex; gap: 15px; font-weight: bold; font-size: 13px;">
+                                <span style="color: ${isCo ? '#dc2626' : '#64748b'};">${isCo ? '☑ Có' : '☐ Có'}</span>
+                                <span style="color: ${!isCo ? '#16a34a' : '#64748b'};">${!isCo ? '☑ Không' : '☐ Không'}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                fullAnswersDiv.innerHTML = "<i>Không có dữ liệu chi tiết câu hỏi.</i>";
+            }
+
+            const ul = document.getElementById('modal-danger-list');
+            ul.innerHTML = p.dangerousAnswers.length === 0 ? "<li style='color:#16a34a;'>✅ KHÔNG GHI NHẬN DỊ VẬT HOẶC NGUY CƠ BẤT THƯỜNG.</li>" : p.dangerousAnswers.map(item => `<li>❌ ${item}</li>`).join('');
+            document.getElementById('modal-signature-img').src = p.signature;
+            document.getElementById('detail-modal').classList.remove('hidden-section');
+        }
+
+        function closeModal() { document.getElementById('detail-modal').classList.add('hidden-section'); }
+
+        function exportDataExcel() {
+            if (database.length === 0) {
+                alert("Chưa có dữ liệu để xuất!");
+                return;
+            }
+
+            let csvContent = "\uFEFF";
+            csvContent += "Mã Hồ Sơ,Thời Gian,Họ Tên,Tuổi,SĐT,Lý Do Đi Chụp,Chiều Cao (cm),Cân Nặng (kg),Tiền Sử MRI,Mức Nguy Cơ,Trạng Thái,Ý Kiến Cam Kết,Chi Tiết Sàng Lọc Khai Báo\n";
+
+            database.forEach(p => {
+                let detailsStr = p.fullAnswers ? p.fullAnswers.map(fa => `${fa.group} - ${fa.question}: ${fa.answer}`).join(" | ") : "";
+                let safeName = `"${p.name.replace(/"/g, '""')}"`;
+                let safeReason = `"${(p.reason || '').replace(/"/g, '""')}"`;
+                let safeAgree = `"${p.agree.replace(/"/g, '""')}"`;
+                let safeDetails = `"${detailsStr.replace(/"/g, '""')}"`;
+
+                csvContent += `"${p.id}","${p.timePlain}",${safeName},${p.age},"${p.phone}",${safeReason},${p.height},${p.weight},"${p.history}","${p.color}","${p.status}",${safeAgree},${safeDetails}\n`;
+            });
+
+            let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = `DanhSachKhaiBaoMRI_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            alert("Đã xuất file Excel/CSV thành công!");
+        }
+
+        function exportSinglePatientJSON() {
+            if (currentSelectedModalIndex === null) return;
+            const p = database[currentSelectedModalIndex];
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(p, null, 2));
+            let dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `PhapLy_${p.id}_${p.name.replace(/\s+/g, '_')}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+        }
+
+        function toggleChatBox() {
+            const box = document.getElementById('ai-chat-box');
+            box.classList.toggle('hidden-section');
+        }
+
+        function handleChatKeyPress(e) {
+            if (e.key === 'Enter') { sendChatMessage(); }
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('ai-chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+            appendMessage(text, 'user');
+            input.value = '';
+            setTimeout(() => {
+                appendMessage("Trợ lý KTV MRI AI: Bạn có thể lọc danh sách theo lý do đi chụp, thay đổi trạng thái duyệt hoặc bấm nút 'Xuất Excel' ở góc trên bảng để lưu file.", 'bot');
+            }, 600);
+        }
+
+        function appendMessage(text, sender) {
+            const container = document.getElementById('ai-chat-messages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `ai-message ${sender}`;
+            msgDiv.innerText = text;
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        window.onload = function() { loadQuestions(); setupCanvas(); loadFromLocalStorage(); };
     </script>
 </body>
 </html>
