@@ -74,9 +74,7 @@
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 console.log("Firebase connected");
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
+               
         let allPatients = [];
 
         // Tự động nhận dữ liệu realtime khi bệnh nhân gửi phiếu
@@ -99,10 +97,7 @@ console.log("Firebase connected");
     alert("Không đọc được dữ liệu Firebase");
 
 });
-            }
-            renderTable();
-        });
-
+        
         function renderTable() {
             const searchKw = document.getElementById('search').value.toLowerCase();
             const riskFilter = document.getElementById('filter-risk').value;
