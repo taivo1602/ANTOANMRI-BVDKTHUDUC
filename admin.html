@@ -64,25 +64,41 @@
         const firebaseConfig = {
   apiKey: "AIzaSyDjWIZl60JZlZjnFIEhezCFcomKS5OEQc4",
   authDomain: "antoanconghuongtu.firebaseapp.com",
+  databaseURL: "https://antoanconghuongtu-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "antoanconghuongtu",
   storageBucket: "antoanconghuongtu.firebasestorage.app",
   messagingSenderId: "458456831621",
   appId: "1:458456831621:web:f2936a421ca8303c5a7bec"
-databaseURL:"https://antoanconghuongtu-default-rtdb.asia-southeast1.firebasedatabase.app",
-        };
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+console.log("Firebase connected");
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         let allPatients = [];
 
         // Tự động nhận dữ liệu realtime khi bệnh nhân gửi phiếu
-        db.ref('patients').on('value', (snapshot) => {
-            const data = snapshot.val();
-            allPatients = [];
-            if (data) {
-                Object.keys(data).forEach(key => {
-                    allPatients.unshift(data[key]);
-                });
+        db.ref("patients").on("value", function(snapshot){
+
+    allPatients = [];
+
+    snapshot.forEach(function(child){
+
+        allPatients.unshift(child.val());
+
+    });
+
+    renderTable();
+
+}, function(error){
+
+    console.log(error);
+
+    alert("Không đọc được dữ liệu Firebase");
+
+});
             }
             renderTable();
         });
