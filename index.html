@@ -305,21 +305,13 @@
 
     <script>
 const firebaseConfig = {
-
- apiKey:"...",
-
- authDomain:"...",
-
- databaseURL:"...",
-
- projectId:"...",
-
- storageBucket:"...",
-
- messagingSenderId:"...",
-
- appId:"..."
-
+  apiKey: "AIzaSyDjWIZl60JZlZjnFIEhezCFcomKS5OEQc4",
+  authDomain: "antoanconghuongtu.firebaseapp.com",
+  databaseURL: "https://antoanconghuongtu-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "antoanconghuongtu",
+  storageBucket: "antoanconghuongtu.firebasestorage.app",
+  messagingSenderId: "458456831621",
+  appId: "1:458456831621:web:f2936a421ca8303c5a7bec"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -384,12 +376,7 @@ const db=firebase.database();
         }
         function clearSign() { cx.clearRect(0, 0, cv.width, cv.height); }
 
-        function //loadFromLocalStorage(); {
-            const stored = localStorage.getItem('mri_offline_db_thuduc_v4');
-            if (stored) { database = JSON.parse(stored); renderTable(); }
-        }
-
-        function submitForm(e) {
+               function submitForm(e) {
             e.preventDefault();
             let riskColor = "GREEN"; let dangerousAnswers = [];
             let fullAnswersRecord = [];
@@ -615,7 +602,13 @@ alert(error.message);
             container.scrollTop = container.scrollHeight;
         }
 
-        window.onload = function() { loadQuestions(); setupCanvas(); loadFromLocalStorage(); };
+        window.onload = function(){
+
+    loadQuestions();
+
+    setupCanvas();
+
+};
     </script>
 </body>
 </html>
