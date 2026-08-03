@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Quản Lý An Toàn MRI - BVĐK Thủ Đức</title>
+    <title>Hệ Thống Quản Lý An Toàn MRI - BV ĐA KHOA THỦ ĐỨC</title>
     <style>
         body { font-family: Arial, sans-serif; background: #f1f5f9; margin: 0; padding: 20px; color: #334155; }
         .header { background: #1d4ed8; color: white; padding: 15px 20px; border-radius: 8px; font-size: 20px; font-weight: bold; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
@@ -18,7 +18,38 @@
         .badge-YELLOW { background: #d97706; }
         .badge-GREEN { background: #16a34a; }
         .btn-view { background: #2563eb; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
-    </style>
+    .page-break{
+    display:none;
+}
+
+@media print{
+
+    .page-break{
+        display:block;
+        page-break-after:always;
+    }
+
+    #detailModal{
+        position:static !important;
+        background:white !important;
+    }
+
+    #detailModal > div{
+        width:100% !important;
+        max-height:none !important;
+        overflow:visible !important;
+        margin:0 !important;
+        box-shadow:none !important;
+    }
+
+    .header,
+    .panel,
+    button{
+        display:none !important;
+    }
+
+}
+</style>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -113,27 +144,7 @@ console.log("Firebase connected");
                 tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#94a3b8;">Không tìm thấy hồ sơ bệnh nhân nào.</td></tr>`;
                 return;
             }
-function showDetail(id){
 
-    const p = allPatients.find(x => x.id === id);
-
-    if(!p) return;
-
-    let danger = "Không có";
-
-    if(Array.isArray(p.dangerousAnswers)){
-        danger = p.dangerousAnswers.join(", ");
-    }
-
-    alert(
-        "Họ tên: " + p.name +
-        "\nTuổi: " + p.age +
-        "\nSĐT: " + p.phone +
-        "\nLý do: " + p.reason +
-        "\nNguy cơ: " + danger
-    );
-
-}
 
             tbody.innerHTML = filtered.map(p => `
                 <tr>
@@ -152,6 +163,241 @@ Xem chi tiết
                 </tr>
             `).join('');
         }
+function showDetail(id){
+
+    const p = allPatients.find(x => x.id === id);
+
+    if(!p){
+        alert("Không tìm thấy hồ sơ");
+        return;
+    }
+
+    let answerTable="";
+
+    if(p.fullAnswers && p.fullAnswers.length){
+
+        answerTable=`
+
+        <h3 style="text-align:center;margin:15px 0;">
+            BẢNG CÂU TRẢ LỜI KHAI BÁO AN TOÀN MRI
+        </h3>
+
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+
+            <tr style="background:#1d4ed8;color:white;">
+
+                <th style="border:1px solid #ccc;padding:6px;">STT</th>
+
+                <th style="border:1px solid #ccc;padding:6px;">Nhóm</th>
+
+                <th style="border:1px solid #ccc;padding:6px;">Câu hỏi</th>
+
+                <th style="border:1px solid #ccc;padding:6px;">Trả lời</th>
+
+            </tr>
+
+            ${p.fullAnswers.map((item,index)=>`
+
+            <tr ${item.answer=="Có"
+                ? 'style="background:#fee2e2;"'
+                : ''}>
+
+                <td style="border:1px solid #ccc;padding:6px;text-align:center;">
+                    ${index+1}
+                </td>
+
+                <td style="border:1px solid #ccc;padding:6px;">
+                    ${item.group}
+                </td>
+
+                <td style="border:1px solid #ccc;padding:6px;">
+                    ${item.question}
+                </td>
+
+                <td style="
+                    border:1px solid #ccc;
+                    padding:6px;
+                    text-align:center;
+                    font-weight:bold;
+                    color:${item.answer=="Có" ? "#dc2626" : "#16a34a"};
+                ">
+                    ${item.answer}
+                </td>
+
+            </tr>
+
+            `).join("")}
+
+        </table>
+
+        `;
+
+    }else{
+
+        answerTable=`
+        <div style="padding:20px;text-align:center;">
+            Không có dữ liệu bảng câu hỏi.
+        </div>
+        `;
+
+    }
+
+    document.getElementById("detailContent").innerHTML=`
+
+    <div id="printArea" style="font-family:Arial;line-height:1.5;">
+
+        <h2 style="text-align:center;color:#1d4ed8;">
+            BỆNH VIỆN ĐA KHOA THỦ ĐỨC
+        </h2>
+
+        <br>
+
+        <table style="width:100%;border-collapse:collapse;">
+
+            <tr>
+                <td><b>Mã hồ sơ</b></td>
+                <td>${p.id}</td>
+
+                <td><b>Ngày khai báo</b></td>
+                <td>${p.time}</td>
+            </tr>
+
+            <tr>
+                <td><b>Họ tên</b></td>
+                <td>${p.name}</td>
+
+                <td><b>Tuổi</b></td>
+                <td>${p.age}</td>
+            </tr>
+
+            <tr>
+                <td><b>SĐT</b></td>
+                <td>${p.phone}</td>
+
+                <td><b>Mức nguy cơ</b></td>
+                <td>${p.color}</td>
+            </tr>
+
+            <tr>
+                <td><b>Lý do chụp</b></td>
+                <td colspan="3">${p.reason}</td>
+            </tr>
+
+        </table>
+
+        ${answerTable}
+
+<div class="signature-section">
+
+<h3>KẾT LUẬN</h3>
+
+<div style="
+border:2px solid #000;
+padding:12px;
+font-size:18px;
+font-weight:bold;
+">
+
+${
+p.color=="RED"
+? "🔴 XEM XÉT TRƯỚC KHI CHỤP MRI"
+: p.color=="YELLOW"
+? "🟡 CÓ THỂ CHỤP MRI"
+: "🟢 ĐỦ ĐIỀU KIỆN CHỤP MRI"
+}
+
+</div>
+
+<br><br>
+
+<table style="width:100%;">
+
+<tr>
+
+<td style="width:50%;text-align:center;">
+
+TP. Hồ Chí Minh, ngày ..... tháng ..... năm .....
+
+<br><br>
+
+<b>BỆNH NHÂN / NGƯỜI ĐẠI DIỆN</b>
+
+<br>
+
+(Ký và ghi rõ họ tên)
+
+<br><br><br><br><br><br>
+
+....................................
+
+</td>
+
+<td style="width:50%;text-align:center;">
+
+TP. Hồ Chí Minh, ngày ..... tháng ..... năm .....
+
+<br><br>
+
+<b>KỸ THUẬT VIÊN MRI</b>
+
+<br>
+
+(Ký và ghi rõ họ tên)
+
+<br><br><br><br><br><br>
+
+....................................
+
+</td>
+
+</tr>
+
+</table>
+
+</div>
+    </div>
+
+    `;
+
+    document.getElementById("detailModal").style.display="block";
+
+}
+
+function closeDetail(){
+
+    document.getElementById("detailModal").style.display="none";
+
+}
     </script>
+<!-- Cửa sổ xem chi tiết -->
+<div id="detailModal"
+     style="display:none;
+            position:fixed;
+            left:0;
+            top:0;
+            width:100%;
+            height:100%;
+            background:rgba(0,0,0,.5);
+            z-index:9999;">
+
+    <div style="background:#fff;
+                width:700px;
+                margin:40px auto;
+                padding:20px;
+                border-radius:8px;">
+
+        <h2>PHIẾU KHAI BÁO AN TOÀN MRI</h2>
+
+        <div id="detailContent"></div>
+
+        <br>
+
+        <button onclick="window.print()">🖨 In phiếu</button>
+
+        <button onclick="closeDetail()">Đóng</button>
+
+    </div>
+
+</div>
 </body>
 </html>
