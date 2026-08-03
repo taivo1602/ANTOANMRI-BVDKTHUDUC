@@ -424,7 +424,7 @@ const db=firebase.database();
                 agree: document.querySelector('input[name="agreement"]:checked').value === "ĐỒNG Ý" ? "ĐỒNG Ý chụp MRI và tiêm đối quang từ" : "KHÔNG ĐỒNG Ý thực hiện chụp",
                 fullAnswers: fullAnswersRecord,
                 dangerousAnswers: dangerousAnswers, 
-                signature: cv.toDataURL()
+                signature: ""
             };
 
             db.ref("patients/"+payload.id)
@@ -612,8 +612,6 @@ alert(error.message);
         window.onload = function(){
 
     loadQuestions();
-
-    setupCanvas();
 
 };
     </script>
