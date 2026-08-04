@@ -23,6 +23,43 @@
 }
 
 @media print{
+@page{
+    size:A4 portrait;
+    margin:8mm;
+}
+
+html,body{
+    zoom:0.82;
+    font-size:12px;
+}
+
+table{
+    font-size:11px !important;
+}
+
+td,th{
+    padding:4px !important;
+}
+
+h2{
+    margin:0 0 8px 0 !important;
+}
+
+h3{
+    margin:8px 0 5px 0 !important;
+}
+
+.signature-section{
+    margin-top:10px !important;
+}
+
+tr{
+    page-break-inside:avoid;
+}
+
+table{
+    page-break-inside:auto;
+}
 
     .page-break{
         display:block;
@@ -57,20 +94,40 @@
 <body>
 
     <div class="header">
-        <span>🖥️ BẢNG ĐIỀU HÀNH PHÒNG CHỤP MRI - THỜI GIAN THỰC</span>
+        <span>🖥️ BẢNG DANH SÁCH CHỤP MRI ĐÃ KHAI BÁO AN TOÀN</span>
         <span id="connection-status" style="font-size: 13px; background: #16a34a; padding: 4px 8px; border-radius: 4px;">🟢 Đang kết nối Firebase</span>
     </div>
 
     <div class="panel">
         <div class="controls">
-            <input type="text" id="search" placeholder="Tìm tên bệnh nhân / SĐT..." onkeyup="renderTable()">
-            <select id="filter-risk" onchange="renderTable()">
-                <option value="">Tất cả mức độ nguy cơ</option>
-                <option value="RED">ĐỎ (Chống chỉ định)</option>
-                <option value="YELLOW">VÀNG (Cần báo Bác sĩ)</option>
-                <option value="GREEN">XANH (An toàn)</option>
-            </select>
-        </div>
+
+    <input type="text" id="search"
+        placeholder="Tìm tên bệnh nhân / SĐT..."
+        onkeyup="renderTable()">
+
+    <select id="filter-risk" onchange="renderTable()">
+        <option value="">Tất cả mức độ nguy cơ</option>
+        <option value="RED">ĐỎ (Chống chỉ định)</option>
+        <option value="YELLOW">VÀNG (Cần báo Bác sĩ)</option>
+        <option value="GREEN">XANH (An toàn)</option>
+    </select>
+
+    <select id="filter-date" onchange="renderTable()">
+        <option value="">Tất cả ngày</option>
+        <option value="today">Today</option>
+        <option value="yesterday">Yesterday</option>
+        <option value="custom">Custom Range</option>
+    </select>
+
+    <input type="date"
+           id="from-date"
+           onchange="renderTable()">
+
+    <input type="date"
+           id="to-date"
+           onchange="renderTable()">
+
+</div>
 
         <table>
             <thead>
@@ -115,11 +172,21 @@ console.log("Firebase connected");
 
     snapshot.forEach(function(child){
 
-        allPatients.unshift(child.val());
+    allPatients.push(child.val());
 
-    });
+});
 
-    renderTable();
+// Sắp xếp theo thời điểm gửi
+allPatients.sort(function(a,b){
+
+    const ta = a.timestamp || 0;
+    const tb = b.timestamp || 0;
+
+    return ta - tb;
+
+});
+
+renderTable();
 
 }, function(error){
 
@@ -128,6 +195,87 @@ console.log("Firebase connected");
     alert("Không đọc được dữ liệu Firebase");
 
 });
+function checkDateFilter(patientTime){
+
+    const filter = document.getElementById("filter-date").value;
+
+    if(filter==="") return true;
+
+    let text = String(patientTime);
+
+    // đổi <br> thành xuống dòng
+    text = text.replace(/<br\s*\/?>/gi,"\n");
+
+    const lines = text.split(/\r?\n/);
+
+    // tìm dòng có dạng dd/mm/yyyy
+    let dateStr = "";
+
+    for(const line of lines){
+
+        if(/\d{2}\/\d{2}\/\d{4}/.test(line)){
+            dateStr = line.match(/\d{2}\/\d{2}\/\d{4}/)[0];
+            break;
+        }
+
+    }
+
+    if(dateStr==="") return true;
+
+    const arr = dateStr.split("/");
+
+    const d = new Date(
+        Number(arr[2]),
+        Number(arr[1])-1,
+        Number(arr[0])
+    );
+
+    d.setHours(0,0,0,0);
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate()-1);
+
+    if(filter==="today")
+        return d.getTime()===today.getTime();
+
+    if(filter==="yesterday")
+        return d.getTime()===yesterday.getTime();
+
+    if(filter==="custom"){
+
+    const from=document.getElementById("from-date").value;
+    const to=document.getElementById("to-date").value;
+
+    if(!from || !to)
+        return true;
+
+    // yyyy-mm-dd
+    const fArr = from.split("-");
+    const tArr = to.split("-");
+
+    const f = new Date(
+        Number(fArr[0]),
+        Number(fArr[1])-1,
+        Number(fArr[2]),
+        0,0,0
+    );
+
+    const t = new Date(
+        Number(tArr[0]),
+        Number(tArr[1])-1,
+        Number(tArr[2]),
+        23,59,59
+    );
+
+    return d >= f && d <= t;
+}
+
+    return true;
+
+}
         
         function renderTable() {
             const searchKw = document.getElementById('search').value.toLowerCase();
@@ -137,7 +285,10 @@ console.log("Firebase connected");
             const filtered = allPatients.filter(p => {
                 const matchSearch = p.name.toLowerCase().includes(searchKw) || p.phone.includes(searchKw) || p.id.toLowerCase().includes(searchKw);
                 const matchRisk = riskFilter === "" || p.color === riskFilter;
-                return matchSearch && matchRisk;
+
+const matchDate = checkDateFilter(p.time);
+
+return matchSearch && matchRisk && matchDate;
             });
 
             if (filtered.length === 0) {
@@ -150,7 +301,7 @@ console.log("Firebase connected");
                 <tr>
                     <td>${p.time}</td>
                     <td><b>${p.id}</b></td>
-                    <td><b>${p.name}</b></td>
+                    <td>${p.name.toUpperCase()}</td>
                     <td>${p.age} tuổi - ${p.phone}</td>
                     <td>${p.reason}</td>
                     <td><span class="badge badge-${p.color}">${p.color}</span></td>
@@ -215,14 +366,15 @@ function showDetail(id){
                 </td>
 
                 <td style="
-                    border:1px solid #ccc;
-                    padding:6px;
-                    text-align:center;
-                    font-weight:bold;
-                    color:${item.answer=="Có" ? "#dc2626" : "#16a34a"};
-                ">
-                    ${item.answer}
-                </td>
+    border:1px solid #ccc;
+    padding:6px;
+    text-align:center;
+    color:${item.answer=="Có" ? "#dc2626" : "#16a34a"};
+    font-weight:${item.answer=="Có" ? "bold" : "normal"};
+    font-size:${item.answer=="Có" ? "15px" : "13px"};
+">
+    ${item.answer}
+</td>
 
             </tr>
 
@@ -263,21 +415,28 @@ function showDetail(id){
             </tr>
 
             <tr>
-                <td><b>Họ tên</b></td>
-                <td>${p.name}</td>
+    <td><b>Họ tên</b></td>
+    <td><b>${(p.name || "").toUpperCase()}</b></td>
 
-                <td><b>Tuổi</b></td>
-                <td>${p.age}</td>
-            </tr>
+    <td><b>Tuổi</b></td>
+    <td>${p.age}</td>
+</tr>
 
-            <tr>
-                <td><b>SĐT</b></td>
-                <td>${p.phone}</td>
+<tr>
+    <td><b>Chiều cao</b></td>
+    <td>${p.height || ""} cm</td>
 
-                <td><b>Mức nguy cơ</b></td>
-                <td>${p.color}</td>
-            </tr>
+    <td><b>Cân nặng</b></td>
+    <td>${p.weight || ""} kg</td>
+</tr>
 
+<tr>
+    <td><b>SĐT</b></td>
+    <td>${p.phone}</td>
+
+    <td><b>Mức nguy cơ</b></td>
+    <td>${p.color}</td>
+</tr>
             <tr>
                 <td><b>Lý do chụp</b></td>
                 <td colspan="3">${p.reason}</td>
@@ -379,14 +538,36 @@ function closeDetail(){
             height:100%;
             background:rgba(0,0,0,.5);
             z-index:9999;">
+<div style="
+    background:#fff;
+    width:700px;
+    margin:40px auto;
+    padding:20px;
+    border-radius:8px;
+    position:relative;
+">
+<button
+    onclick="closeDetail()"
+    style="
+        position:absolute;
+        top:10px;
+        right:10px;
+        width:32px;
+        height:32px;
+        border:none;
+        border-radius:50%;
+        background:#ef4444;
+        color:white;
+        font-size:18px;
+        font-weight:bold;
+        cursor:pointer;
+    ">
+    ✕
+</button>
 
-    <div style="background:#fff;
-                width:700px;
-                margin:40px auto;
-                padding:20px;
-                border-radius:8px;">
-
-        <h2>PHIẾU KHAI BÁO AN TOÀN MRI</h2>
+        <h2 style="text-align:center; margin:0 0 20px 0; color:#1d4ed8;">
+    PHIẾU KHAI BÁO AN TOÀN MRI
+</h2>
 
         <div id="detailContent"></div>
 
