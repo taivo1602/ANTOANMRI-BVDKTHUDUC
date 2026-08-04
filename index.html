@@ -163,18 +163,22 @@
                         <select id="p-history-mri" required>
                             <option value="">-- Chọn đáp án --</option>
                             <option value="Có">Có</option>
-                            <option value="Không">Không</option>
+                            <option value="Chưa">Chưa</option>
                         </select>
                     </div>
                 </div>
 
                 <!-- Ô THÊM: BỆNH NHÂN TỰ NHẬP LÝ DO ĐI CHỤP -->
-                <div class="form-grid">
-                    <div class="form-group full-width">
-                        <label> LÝ DO CHỤP MRI, VỊ TRÍ ĐAU, THỜI GIAN XUẤT HIỆN TRIỆU CHỨNG: <span style="color:red">*</span></label>
-                        <input type="text" id="p-reason" required placeholder="Ví dụ: Đau đầu kéo dài, Chụp cột sống cổ, v.v.">
-                    </div>
-                </div>
+                <div class="form-group" style="margin-top:12px;">
+    <label>LÝ DO CHỤP MRI,THỜI GIAN XUẤT HIỆN TRIỆU CHỨNG:
+        <span style="color:red">*</span>
+    </label>
+
+    <textarea id="p-reason"
+              rows="3"
+              required
+              placeholder="Ví dụ: Đau đầu kéo dài 2 tuần, chóng mặt, chụp MRI não..."></textarea>
+</div>
 
                 <div class="group-header bg-danger-mri">🛑 NHÓM TUYỆT ĐỐI CHỐNG CHỈ ĐỊNH (CÓ = ĐỎ)</div>
                 <div id="group-1"></div>
@@ -225,7 +229,7 @@
         </section>
 
         <!-- BẢNG QUẢN LÝ DÀNH CHO KỸ THUẬT VIÊN PHÒNG MRI -->
-        <section class="panel manager-section">
+        <section class="panel manager-section" style="display:none;">
             <div class="table-title-bar">
                 <h3>📋 DANH SÁCH BỆNH NHÂN ĐÃ KHAI BÁO (THỜI GIAN THỰC)</h3>
                 <div class="filter-controls">
@@ -409,9 +413,14 @@ const db=firebase.database();
             const timeStr = String(now.getHours()).padStart(2,'0') + ":" + String(now.getMinutes()).padStart(2,'0') + ":" + String(now.getSeconds()).padStart(2,'0') + "<br>" + String(now.getDate()).padStart(2,'0') + "/" + String(now.getMonth()+1).padStart(2,'0') + "/" + now.getFullYear();
 
             const payload = {
-                id: 'MRI-' + Date.now().toString().slice(-6),
-                time: timeStr,
-                timePlain: `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')} ${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`,
+    id: 'MRI-' + Date.now().toString().slice(-6),
+
+    // Thời gian gửi thực tế
+    timestamp: Date.now(),
+
+    time: timeStr,
+
+    timePlain: `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')} ${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`,
                 name: document.getElementById('p-name').value.toLowerCase(), 
                 age: document.getElementById('p-age').value, 
                 phone: document.getElementById('p-phone').value, 
